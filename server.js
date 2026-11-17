@@ -135,6 +135,7 @@ app.use((req, res, next) => {
   res.status(404).json({ message: "Resource not found" });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port http://localhost:${port}`);
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
