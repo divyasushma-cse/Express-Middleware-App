@@ -6,6 +6,11 @@ import morgan from "morgan";
 const app = express();
 const port = 6500;
 
+// In-memory data store for actual patient records
+let patients = [
+  { id: 1, name: "Divya Sushma", age: 20, ward: "General" }
+];
+
 // 1. Application-level middleware
 // 4. Third party.
 app.use(cors());
@@ -44,45 +49,77 @@ app.use(logger);
 // CRUD
 // POST - Create : http://localhost:6500/api/v1/patients
 app.post("/api/v1/patients", validatePatient, (req, res) => {
-  res.status(201).json({ message: "Patient created successfully" });
+  const { name, age, ward } = req.body;
+  const newPatient = {
+    id: patients.length > 0 ? Math.max(...patients.map((p) => p.id)) + 1 : 1,
+    name,
+    age,
+    ward
+  };
+  patients.push(newPatient);
+  res.status(201).json({ message: "Patient created successfully", data: newPatient });
 });
 
 // GET - Read : http://localhost:6500/api/v1/patients
 app.get("/api/v1/patients", (req, res) => {
-  res.status(200).json({ message: "patients fetched successfully" });
+  res.status(200).json({ message: "patients fetched successfully", data: patients });
 });
 
 // GET - Read by ID: http://localhost:6500/api/v1/patients/:id
 app.get("/api/v1/patients/:id", (req, res) => {
   const { id } = req.params;
-  if (id < 1) {
+  const numId = parseInt(id, 10);
+  if (numId < 1 || isNaN(numId)) {
     const err = new Error("Patient not found");
     err.statusCode = 404;
     throw err;
   }
-  res.status(200).json({ message: "patient details fetched successfully" });
+  const patient = patients.find((p) => p.id === numId);
+  if (!patient) {
+    const err = new Error("Patient not found");
+    err.statusCode = 404;
+    throw err;
+  }
+  res.status(200).json({ message: "patient details fetched successfully", data: patient });
 });
 
 // PUT - Update URL: http://localhost:6500/api/v1/patients/:id
 app.put("/api/v1/patients/:id", validatePatient, (req, res) => {
   const { id } = req.params;
-  if (id < 1) {
+  const numId = parseInt(id, 10);
+  if (numId < 1 || isNaN(numId)) {
     const err = new Error("Patient not found");
     err.statusCode = 404;
     throw err;
   }
-  res.status(200).json({ message: "Patient updated successfully" });
+  const index = patients.findIndex((p) => p.id === numId);
+  if (index === -1) {
+    const err = new Error("Patient not found");
+    err.statusCode = 404;
+    throw err;
+  }
+  const { name, age, ward } = req.body;
+  patients[index] = { ...patients[index], name, age, ward };
+  res.status(200).json({ message: "Patient updated successfully", data: patients[index] });
 });
 
 // DELETE - URL: http://localhost:6500/api/v1/patients/:id
 app.delete("/api/v1/patients/:id", (req, res) => {
   const { id } = req.params;
-  if (id < 1) {
+  const numId = parseInt(id, 10);
+  if (numId < 1 || isNaN(numId)) {
     const err = new Error("Patient not found");
     err.statusCode = 404;
     throw err;
   }
-  res.status(200).json({ message: "Patient deleted successfully" });
+  const index = patients.findIndex((p) => p.id === numId);
+  if (index === -1) {
+    const err = new Error("Patient not found");
+    err.statusCode = 404;
+    throw err;
+  }
+  const deleted = patients.splice(index, 1)[0];
+  res.status(200).json({ message: "Patient deleted successfully", data: deleted });
 });
 
 // 5. Error handling middleware
@@ -101,4 +138,3 @@ app.use((req, res, next) => {
 app.listen(port, () => {
   console.log(`Server is running on port http://localhost:${port}`);
 });
-
