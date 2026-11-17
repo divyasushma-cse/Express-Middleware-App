@@ -4,7 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 
 const app = express();
-const port = 6500;
+const PORT = process.env.PORT || 6500;
 
 // In-memory data store for actual patient records
 let patients = [
